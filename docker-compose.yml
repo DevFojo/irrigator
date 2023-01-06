@@ -1,0 +1,48 @@
+version: "3.7"
+
+services:
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8080:8080"
+      - "8020:8020"
+    environment:
+      - JOBRUNR_DASHBOARD_PORT=8020
+      - JOBRUNR_DASHBOARD_ENABLED=true
+      - REDIS_CONNECTION_STRING=redis://redis:6379
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/irrigator
+      - SPRING_DATASOURCE_USERNAME=docker
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - ENVIRONMENT=dev
+      - DB_NAME=irrigator
+
+  postgres:
+    image: 'postgres:13.1-alpine'
+    environment:
+      - POSTGRES_DB=irrigator
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db-init.sql:/docker-entrypoint-initdb.d/db-init.sql:ro
+      - postgres_data:/data/db
+
+  redis:
+    image: 'bitnami/redis:latest'
+    ports:
+      - "6379:6379"
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    volumes:
+      - redis_data:/data
+volumes:
+  postgres_data:
+  redis_data:
+
